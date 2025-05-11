@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jwt-keys
+  namespace: calendar-app
+data:
+  public.key: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs8sxOdXN8VDHiDzKM8O/
+    eB1tAzeSlR6Q5GGseY8LCuwBd44z3SO/RzCJt19foCMhTv2JUipRzSw8b8JgVvOC
+    9xrlGfhUSaA/kZJ3LvoRfKrgaIkVCyHhluOzGD7NdQeKI5zIA8qW52pwIuE3wn2G
+    ujtGk086dDEG1+S2K9YXMhh1mJAT6r+ZtsmvW1M4X+TnmBkwB5DxJMo254YNiq2I
+    QBJoObRVsKxdz65SuxJExyOWJXTZ5rnedPmDlojqIrKwGd4OMaPfRoJm10q/Iusb
+    ydgvR+M/DUPRksq8r6LqFflW7EBL94cXwVf6iKGCEQhoY6KVpoxps9Uf+ZzXGAqY
+    kQIDAQAB
+    -----END PUBLIC KEY-----
