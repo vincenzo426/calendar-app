@@ -2,7 +2,9 @@ package it.calendar.auth.service;
 
 import io.smallrye.jwt.build.Jwt;
 import it.calendar.auth.model.User;
+import it.calendar.auth.repository.UserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -19,16 +21,19 @@ public class AuthService {
     
     private static final Logger LOG = Logger.getLogger(AuthService.class);
     
+    @Inject
+    UserRepository userRepository;
+    
     @ConfigProperty(name = "mp.jwt.verify.issuer")
     String issuer;
     
     @Transactional
     public User register(String username, String email, String password) {
         // Verifica se l'utente o l'email esistono già
-        if (User.findByUsername(username) != null) {
+        if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists");
         }
-        if (User.findByEmail(email) != null) {
+        if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already exists");
         }
         
@@ -39,7 +44,7 @@ public class AuthService {
         
         // Creazione e salvataggio del nuovo utente
         User user = new User(username, email, hashedPassword);
-        user.persist();
+        userRepository.persist(user);
         
         LOG.debug("User registered successfully with ID: " + user.id);
         return user;
@@ -48,7 +53,7 @@ public class AuthService {
     public Optional<String> authenticate(String username, String password) {
         LOG.debug("Authentication attempt for user: " + username);
         
-        User user = User.findByUsername(username);
+        User user = userRepository.findByUsername(username);
         
         if (user != null && BCrypt.checkpw(password, user.password)) {
             LOG.debug("Authentication successful for user: " + username);

@@ -27,9 +27,4 @@ public class Category extends PanacheEntity {
         this.color = color;
         this.userId = userId;
     }
-    
-    // Metodo per trovare categorie di un utente
-    public static java.util.List<Category> findByUserId(Long userId) {
-        return find("userId", userId).list();
-    }
 }

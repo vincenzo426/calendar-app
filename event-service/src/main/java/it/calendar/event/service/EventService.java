@@ -2,6 +2,7 @@ package it.calendar.event.service;
 
 import it.calendar.event.model.Category;
 import it.calendar.event.model.Event;
+import it.calendar.event.repository.EventRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -14,6 +15,9 @@ public class EventService {
     
     @Inject
     CategoryService categoryService;
+    
+    @Inject
+    EventRepository eventRepository;
     
     @Transactional
     public Event createEvent(String title, String description, 
@@ -32,17 +36,17 @@ public class EventService {
         }
         
         Event event = new Event(title, description, startDateTime, endDateTime, userId, category);
-        event.persist();
+        eventRepository.persist(event);
         
         return event;
     }
     
     public List<Event> getEventsByUserId(Long userId) {
-        return Event.findByUserId(userId);
+        return eventRepository.findByUserId(userId);
     }
     
     public List<Event> getEventsByUserIdAndDateRange(Long userId, LocalDateTime start, LocalDateTime end) {
-        return Event.findByUserIdAndDateRange(userId, start, end);
+        return eventRepository.findByUserIdAndDateRange(userId, start, end);
     }
     
     @Transactional
@@ -50,15 +54,10 @@ public class EventService {
                                      LocalDateTime startDateTime, LocalDateTime endDateTime,
                                      Long userId, Long categoryId) {
         
-        Optional<Event> eventOpt = Event.findByIdOptional(eventId);
+        Optional<Event> eventOpt = eventRepository.findByIdAndUserId(eventId, userId);
         
         if (eventOpt.isPresent()) {
             Event event = eventOpt.get();
-            
-            // Verifica che l'evento appartenga all'utente
-            if (!event.userId.equals(userId)) {
-                return Optional.empty();
-            }
             
             // Aggiorna i campi
             event.title = title;
@@ -86,6 +85,6 @@ public class EventService {
     
     @Transactional
     public boolean deleteEvent(Long eventId, Long userId) {
-        return Event.delete("id = ?1 and userId = ?2", eventId, userId) > 0;
+        return eventRepository.deleteByIdAndUserId(eventId, userId);
     }
 }

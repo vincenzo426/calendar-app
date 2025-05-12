@@ -40,16 +40,4 @@ public class Event extends PanacheEntity {
         this.userId = userId;
         this.category = category;
     }
-    
-    // Metodi di utilità
-    public static java.util.List<Event> findByUserId(Long userId) {
-        return find("userId", userId).list();
-    }
-    
-    public static java.util.List<Event> findByUserIdAndDateRange(Long userId, 
-                                                               LocalDateTime start, 
-                                                               LocalDateTime end) {
-        return find("userId = ?1 and startDateTime >= ?2 and startDateTime <= ?3", 
-                    userId, start, end).list();
-    }
 }

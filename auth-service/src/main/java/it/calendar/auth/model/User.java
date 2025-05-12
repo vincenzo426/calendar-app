@@ -32,13 +32,4 @@ public class User extends PanacheEntity {
         this.email = email;
         this.password = password;
     }
-    
-    // Metodi di utilità per trovare utenti
-    public static User findByUsername(String username) {
-        return find("username", username).firstResult();
-    }
-    
-    public static User findByEmail(String email) {
-        return find("email", email).firstResult();
-    }
 }
