@@ -1,0 +1,17 @@
+# Directory delle chiavi JWT
+jwt-keys/
+
+# File di build e IDE
+*/target/
+.idea/
+*.iml
+
+# File compressi
+*.tar
+
+# Script shell
+*.sh
+
+# Ma traccia questi specifici script
+sync-jwt-keys.sh
+verify-jwt-configuration.sh
