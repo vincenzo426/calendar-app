@@ -22,10 +22,6 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "300m"
-          # Puoi aggiungere qui configurazioni ambientali se necessario
-          # env:
-          #   - name: API_URL
-          #     value: "/api"  # Utilizzeremo il percorso relativo
 ---
 apiVersion: v1
 kind: Service

@@ -1,5 +1,5 @@
-// contexts/EventContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// contexts/EventContext.js - Versione corretta
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { apiClient } from '../services/apiClient';
 import { useAuth } from './AuthContext';
 import { useToast } from '../components/ui/Toast';
@@ -14,19 +14,33 @@ export const EventProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
   const toast = useToast();
   
+  // Ref per evitare duplicazioni delle notifiche di errore
+  const fetchErrorShown = useRef(false);
+  // Ref per tenere traccia se la prima richiesta di caricamento è stata effettuata
+  const initialFetchDone = useRef(false);
+  
   // Carica gli eventi all'avvio se l'utente è autenticato
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchEvents();
-    } else {
+    // Se l'utente è autenticato e non abbiamo ancora caricato gli eventi
+    if (isAuthenticated && !initialFetchDone.current) {
+      initialFetchDone.current = true; // Segnala che abbiamo fatto il caricamento iniziale
+      fetchEvents(); // Carica gli eventi
+    } else if (!isAuthenticated) {
+      // Se l'utente non è autenticato, reimposta lo stato
       setEvents([]);
+      initialFetchDone.current = false; // Reimposta il flag per il prossimo login
+      fetchErrorShown.current = false; // Reimposta il flag degli errori
     }
   }, [isAuthenticated]);
   
   // Funzione per caricare tutti gli eventi
   const fetchEvents = async (startDate, endDate) => {
+    // Se è già in corso un caricamento, non fare nulla
+    if (loading) return;
+    
     try {
       setLoading(true);
+      fetchErrorShown.current = false; // Reimposta il flag degli errori per ogni nuova richiesta
       
       // Costruisci l'URL di query
       let url = '/api/events';
@@ -50,8 +64,13 @@ export const EventProvider = ({ children }) => {
       
       return response;
     } catch (error) {
-      toast.error('Errore durante il caricamento degli eventi');
       console.error('Errore durante il caricamento degli eventi:', error);
+      
+      // Mostra la notifica di errore solo se non è già stata mostrata
+      if (!fetchErrorShown.current) {
+        toast.error('Errore durante il caricamento degli eventi');
+        fetchErrorShown.current = true; // Segna che abbiamo mostrato l'errore
+      }
     } finally {
       setLoading(false);
     }
@@ -66,7 +85,8 @@ export const EventProvider = ({ children }) => {
       const response = await apiClient.post('/api/events', eventData);
       
       // Aggiorna la lista degli eventi
-      setEvents([...events, response]);
+      // Usa il functional update per prevenire race conditions
+      setEvents(prevEvents => [...prevEvents, response]);
       
       toast.success('Evento creato con successo!');
       
@@ -89,9 +109,13 @@ export const EventProvider = ({ children }) => {
       const response = await apiClient.put(`/api/events/${eventId}`, eventData);
       
       // Aggiorna la lista degli eventi
-      setEvents(
-        events.map(event => (event.id === eventId ? response : event))
-      );
+      // Invece di sostituire solo l'evento aggiornato, sostituisce l'intera lista
+      // per mantenere l'ordinamento coerente (questo verrà gestito dal componente Calendar)
+      setEvents(prevEvents => {
+        // Rimuove l'evento vecchio e aggiunge quello nuovo
+        const updatedEvents = prevEvents.filter(event => event.id !== eventId);
+        return [...updatedEvents, response];
+      });
       
       toast.success('Evento aggiornato con successo!');
       

@@ -1,5 +1,5 @@
-// components/Calendar.jsx (con restrizione date passate)
-import React, { useState, useEffect } from 'react';
+// components/Calendar.jsx - Versione corretta
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useEvent } from '../contexts/EventContext';
 import { CalendarEvent } from './events/CalendarEvent';
@@ -15,24 +15,35 @@ const MONTHS = [
 const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
 
 export const Calendar = ({ onEventClick, onAddEvent }) => {
-  const { events, fetchEvents } = useEvent();
+  const { events, fetchEvents, loading } = useEvent();
   const toast = useToast();
   
   // Stato per tenere traccia della data corrente visualizzata
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState([]);
   
+  // Ref per tracciare se il calendario è già stato caricato per questo mese
+  const calendarLoadedForMonth = useRef({});
+  
   // Estrai anno e mese dalla data corrente
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
   
+  // Chiave unica per questo mese e anno
+  const monthKey = `${currentYear}-${currentMonth}`;
+  
   // Carica gli eventi all'avvio e quando cambia il mese visualizzato
   useEffect(() => {
-    const startOfMonth = new Date(currentYear, currentMonth, 1);
-    const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
-    
-    fetchEvents(startOfMonth, endOfMonth);
-  }, [currentYear, currentMonth, fetchEvents]);
+    // Previene caricamenti multipli per lo stesso mese
+    if (!calendarLoadedForMonth.current[monthKey] && !loading) {
+      calendarLoadedForMonth.current[monthKey] = true;
+      
+      const startOfMonth = new Date(currentYear, currentMonth, 1);
+      const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
+      
+      fetchEvents(startOfMonth, endOfMonth);
+    }
+  }, [currentYear, currentMonth, fetchEvents, loading, monthKey]);
   
   // Funzione per spostarsi al mese precedente
   const goToPreviousMonth = () => {
@@ -46,7 +57,16 @@ export const Calendar = ({ onEventClick, onAddEvent }) => {
   
   // Funzione per tornare al mese corrente
   const goToToday = () => {
-    setCurrentDate(new Date());
+    const today = new Date();
+    const newMonthKey = `${today.getFullYear()}-${today.getMonth()}`;
+    
+    // Se stiamo tornando a un mese che abbiamo già visto, cancelliamo il flag
+    // in modo che venga ricaricato (potrebbe essere cambiato nel frattempo)
+    if (calendarLoadedForMonth.current[newMonthKey]) {
+      calendarLoadedForMonth.current[newMonthKey] = false;
+    }
+    
+    setCurrentDate(today);
   };
   
   // Calcola i giorni da visualizzare nel calendario
@@ -104,15 +124,71 @@ export const Calendar = ({ onEventClick, onAddEvent }) => {
     setCalendarDays(days);
   }, [currentDate, currentMonth, currentYear]);
   
-  // Filtra gli eventi per data
+  // Filtra e ordina gli eventi per data
   const getEventsForDate = (date) => {
-    return events.filter(event => {
-      const eventDate = new Date(event.startDateTime);
-      return (
-        eventDate.getDate() === date.getDate() &&
-        eventDate.getMonth() === date.getMonth() &&
-        eventDate.getFullYear() === date.getFullYear()
-      );
+    // Prima filtra gli eventi per la data corrente
+    const filteredEvents = events.filter(event => {
+      if (!event || !event.startDateTime) return false;
+      
+      try {
+        const eventDate = new Date(event.startDateTime);
+        return (
+          eventDate.getDate() === date.getDate() &&
+          eventDate.getMonth() === date.getMonth() &&
+          eventDate.getFullYear() === date.getFullYear()
+        );
+      } catch (err) {
+        console.error("Errore nel parsing della data dell'evento:", err);
+        return false;
+      }
+    });
+    
+    // Poi ordina gli eventi per:
+    // 1. Orario di fine (crescente)
+    // 2. Orario di inizio (crescente) in caso di parità
+    return filteredEvents.sort((a, b) => {
+      try {
+        // Gestisce il caso in cui endDateTime è null o invalido
+        const aEndTime = a.endDateTime ? new Date(a.endDateTime) : null;
+        const bEndTime = b.endDateTime ? new Date(b.endDateTime) : null;
+        
+        const aStartTime = new Date(a.startDateTime);
+        const bStartTime = new Date(b.startDateTime);
+        
+        // Se uno dei valori è NaN (data non valida), fallback all'ID per stabilità
+        if (isNaN(aStartTime) || isNaN(bStartTime)) {
+          return (a.id || 0) - (b.id || 0);
+        }
+        
+        // Validità degli orari di fine
+        const aEndValid = aEndTime && !isNaN(aEndTime);
+        const bEndValid = bEndTime && !isNaN(bEndTime);
+        
+        // Se entrambi non hanno orario di fine valido, ordina per orario di inizio
+        if (!aEndValid && !bEndValid) {
+          return aStartTime - bStartTime;
+        } else if (!aEndValid) {
+          // Se a non ha orario di fine valido, posizionalo dopo b
+          return 1;
+        } else if (!bEndValid) {
+          // Se b non ha orario di fine valido, posizionalo dopo a
+          return -1;
+        }
+        
+        // Confronta orari di fine
+        const endComparison = aEndTime - bEndTime;
+        
+        // Se gli orari di fine sono uguali o molto vicini (entro 1 minuto), 
+        // confronta gli orari di inizio
+        if (Math.abs(endComparison) < 60000) { // 60000 ms = 1 minuto
+          return aStartTime - bStartTime;
+        }
+        
+        return endComparison;
+      } catch (err) {
+        console.error("Errore nell'ordinamento degli eventi:", err);
+        return 0; // Mantieni l'ordine attuale in caso di errore
+      }
     });
   };
   

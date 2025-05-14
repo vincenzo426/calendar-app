@@ -1,15 +1,27 @@
 // components/Sidebar.jsx
 import React, { useState } from 'react';
-import { Plus, Calendar, Tag, ChevronDown, Circle} from 'lucide-react';
+import { Plus, Calendar, Tag, ChevronDown, Circle, Settings } from 'lucide-react';
 import { useCategory } from '../contexts/CategoryContext';
+import { CategoryManager } from './categories/CategoryManager';
 
 export const Sidebar = ({ onAddEvent, onAddCategory }) => {
   const { categories } = useCategory();
   const [showCategories, setShowCategories] = useState(true);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
   
   // Toggle per la visualizzazione delle categorie
   const toggleCategories = () => {
     setShowCategories(!showCategories);
+  };
+
+  // Apre il gestore di categorie
+  const openCategoryManager = () => {
+    setShowCategoryManager(true);
+  };
+
+  // Chiude il gestore di categorie
+  const closeCategoryManager = () => {
+    setShowCategoryManager(false);
   };
 
   return (
@@ -64,17 +76,31 @@ export const Sidebar = ({ onAddEvent, onAddCategory }) => {
               </div>
             ))}
             
-            {/* Aggiungi categoria */}
-            <button 
-              onClick={onAddCategory}
-              className="flex items-center p-2 text-blue-600 hover:text-blue-800 w-full text-left"
-            >
-              <Circle size={18} className="mr-2" />
-              <span>Aggiungi categoria</span>
-            </button>
+            <div className="flex justify-between mt-2 pt-2 border-t border-gray-100">
+              {/* Aggiungi categoria */}
+              <button 
+                onClick={onAddCategory}
+                className="flex items-center p-2 text-blue-600 hover:text-blue-800"
+              >
+                <Plus size={18} className="mr-2" />
+                <span>Aggiungi</span>
+              </button>
+              
+              {/* Gestisci categorie */}
+              <button 
+                onClick={openCategoryManager}
+                className="flex items-center p-2 text-gray-600 hover:text-gray-800"
+              >
+                <Settings size={18} className="mr-2" />
+                <span>Gestisci</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
+      
+      {/* Modal per gestire le categorie */}
+      {showCategoryManager && <CategoryManager onClose={closeCategoryManager} />}
     </aside>
   );
 };
