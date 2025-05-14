@@ -7,6 +7,7 @@ class ApiClient {
     // URL di base dell'API
     this.baseURL = process.env.REACT_APP_API_URL || '/api';
     console.log('Base URL:', this.baseURL);
+    console.log('demo mode:', process.env.REACT_APP_DEMO_MODE);
     // Headers predefiniti per le richieste
     this.headers = {
       'Content-Type': 'application/json',

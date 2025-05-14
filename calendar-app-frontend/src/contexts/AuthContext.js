@@ -6,7 +6,7 @@ import { useToast } from '../components/ui/Toast';
 
 // Usa il client mock per la demo su GitHub Pages
 const client = process.env.REACT_APP_DEMO_MODE === 'true' ? mockApiClient : apiClient;
-
+console.log('Client API in uso:', client);
 // Creazione del contesto
 const AuthContext = createContext();
 
