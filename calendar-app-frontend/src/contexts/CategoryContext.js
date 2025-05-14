@@ -1,8 +1,12 @@
-// contexts/CategoryContext.js
+// src/contexts/CategoryContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiClient } from '../services/apiClient';
+import { mockApiClient } from '../services/mockApiClient';
 import { useAuth } from './AuthContext';
 import { useToast } from '../components/ui/Toast';
+
+// Usa il client mock per la demo su GitHub Pages
+const client = process.env.REACT_APP_DEMO_MODE === 'true' ? mockApiClient : apiClient;
 
 // Creazione del contesto
 const CategoryContext = createContext();
@@ -29,7 +33,7 @@ export const CategoryProvider = ({ children }) => {
       setLoading(true);
       
       // Chiamata API per ottenere le categorie
-      const response = await apiClient.get('/api/categories');
+      const response = await client.get('/api/categories');
       setCategories(response);
       
       return response;
@@ -47,7 +51,7 @@ export const CategoryProvider = ({ children }) => {
       setLoading(true);
       
       // Chiamata API per creare una nuova categoria
-      const response = await apiClient.post('/api/categories', categoryData);
+      const response = await client.post('/api/categories', categoryData);
       
       // Aggiorna la lista delle categorie
       setCategories([...categories, response]);
@@ -70,7 +74,7 @@ export const CategoryProvider = ({ children }) => {
       setLoading(true);
       
       // Chiamata API per aggiornare una categoria
-      const response = await apiClient.put(`/api/categories/${categoryId}`, categoryData);
+      const response = await client.put(`/api/categories/${categoryId}`, categoryData);
       
       // Aggiorna la lista delle categorie
       setCategories(
@@ -95,7 +99,7 @@ export const CategoryProvider = ({ children }) => {
       setLoading(true);
       
       // Chiamata API per eliminare una categoria
-      await apiClient.delete(`/api/categories/${categoryId}`);
+      await client.delete(`/api/categories/${categoryId}`);
       
       // Aggiorna la lista delle categorie
       setCategories(categories.filter(category => category.id !== categoryId));

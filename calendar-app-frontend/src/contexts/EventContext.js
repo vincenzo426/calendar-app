@@ -1,8 +1,12 @@
-// contexts/EventContext.js - Versione corretta
+// src/contexts/EventContext.js
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { apiClient } from '../services/apiClient';
+import { mockApiClient } from '../services/mockApiClient';
 import { useAuth } from './AuthContext';
 import { useToast } from '../components/ui/Toast';
+
+// Usa il client mock per la demo su GitHub Pages
+const client = process.env.REACT_APP_DEMO_MODE === 'true' ? mockApiClient : apiClient;
 
 // Creazione del contesto
 const EventContext = createContext();
@@ -59,7 +63,7 @@ export const EventProvider = ({ children }) => {
       }
       
       // Chiamata API per ottenere gli eventi
-      const response = await apiClient.get(url);
+      const response = await client.get(url);
       setEvents(response);
       
       return response;
@@ -82,7 +86,7 @@ export const EventProvider = ({ children }) => {
       setLoading(true);
       
       // Chiamata API per creare un nuovo evento
-      const response = await apiClient.post('/api/events', eventData);
+      const response = await client.post('/api/events', eventData);
       
       // Aggiorna la lista degli eventi
       // Usa il functional update per prevenire race conditions
@@ -106,7 +110,7 @@ export const EventProvider = ({ children }) => {
       setLoading(true);
       
       // Chiamata API per aggiornare un evento
-      const response = await apiClient.put(`/api/events/${eventId}`, eventData);
+      const response = await client.put(`/api/events/${eventId}`, eventData);
       
       // Aggiorna la lista degli eventi
       // Invece di sostituire solo l'evento aggiornato, sostituisce l'intera lista
@@ -135,7 +139,7 @@ export const EventProvider = ({ children }) => {
       setLoading(true);
       
       // Chiamata API per eliminare un evento
-      await apiClient.delete(`/api/events/${eventId}`);
+      await client.delete(`/api/events/${eventId}`);
       
       // Aggiorna la lista degli eventi
       setEvents(events.filter(event => event.id !== eventId));

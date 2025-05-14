@@ -1,7 +1,11 @@
-// contexts/AuthContext.js
+// src/contexts/AuthContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiClient } from '../services/apiClient';
+import { apiClient } from '../services/apiClient'; 
+import { mockApiClient } from '../services/mockApiClient';
 import { useToast } from '../components/ui/Toast';
+
+// Usa il client mock per la demo su GitHub Pages
+const client = process.env.REACT_APP_DEMO_MODE === 'true' ? mockApiClient : apiClient;
 
 // Creazione del contesto
 const AuthContext = createContext();
@@ -19,10 +23,9 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           // Imposta il token nell'header delle richieste API
-          apiClient.setAuthToken(token);
+          client.setAuthToken(token);
           
-          // Qui puoi fare una chiamata API per verificare se il token è valido
-          // Per semplicità, decodifichiamo il token JWT per ottenere le informazioni dell'utente
+          // Decodifichiamo il token JWT per ottenere le informazioni dell'utente
           const tokenData = JSON.parse(atob(token.split('.')[1]));
           
           setUser({
@@ -48,7 +51,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       
       // Chiamata API per il login
-      const response = await apiClient.post('/api/auth/login', {
+      const response = await client.post('/api/auth/login', {
         username,
         password
       });
@@ -59,7 +62,7 @@ export const AuthProvider = ({ children }) => {
       setToken(token);
       
       // Imposta il token nell'header delle richieste API
-      apiClient.setAuthToken(token);
+      client.setAuthToken(token);
       
       // Decodifica il token JWT per ottenere le informazioni dell'utente
       const tokenData = JSON.parse(atob(token.split('.')[1]));
@@ -87,7 +90,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       
       // Chiamata API per la registrazione
-      const response = await apiClient.post('/api/auth/register', {
+      const response = await client.post('/api/auth/register', {
         username,
         email,
         password
@@ -101,8 +104,11 @@ export const AuthProvider = ({ children }) => {
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
         throw new Error(error.response.data.message);
+      } else if (error.message) {
+        toast.error(error.message);
+        throw new Error(error.message);
       } else {
-        toast.error('Si è verificato un errore durante la registrazione. Riprova!!!');
+        toast.error('Si è verificato un errore durante la registrazione. Riprova!');
         throw error;
       }
     } finally {
@@ -115,7 +121,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
-    apiClient.removeAuthToken();
+    client.removeAuthToken();
     
     toast.info('Logout effettuato con successo.');
   };

@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { EventProvider } from './contexts/EventContext';
 import { CategoryProvider } from './contexts/CategoryContext';
 import { Loading } from './components/ui/Loading';
+import { Demo } from './components/Demo';
 
 // Componente principale dell'applicazione
 const CalendarApp = () => {
@@ -168,8 +169,16 @@ const CalendarApp = () => {
   );
 };
 
-// App root che fornisce i context necessari
-const App = () => {
+// Componente che gestisce la demo
+const DemoContainer = () => {
+  const [showDemo, setShowDemo] = useState(true);
+  
+  // Se la demo è attiva, mostra la pagina introduttiva
+  if (showDemo) {
+    return <Demo onStart={() => setShowDemo(false)} />;
+  }
+  
+  // Altrimenti mostra l'app
   return (
     <AuthProvider>
       <CategoryProvider>
@@ -182,4 +191,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default DemoContainer;
