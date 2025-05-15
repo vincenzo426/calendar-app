@@ -64,13 +64,17 @@ Il progetto è strutturato secondo un'architettura microservizi, composta da:
 - **Docker** e **Kubernetes** (o K3s)
 - **PostgreSQL 14** o superiore
 
-## Installazione e Setup
+## Installazione
 
-### Prerequisiti
-1. Installare JDK 17 o superiore
-2. Installare Node.js 16 o superiore
-3. Installare Docker e K3s
-4. Configurare PostgreSQL
+```bash
+# Clona la repository
+git clone https://github.com/vincenzo426/calendar-app
+cd calendar-app
+# concedi i permessi per eseguire il file manage-calendar-app.sh
+chmod +x manage-calendar-app.sh
+#esegui il file che ti guidera nel processo di deployment del progetto
+./manage-calendar-app.sh
+```
 
 ### Demo
 Per provare le funzionalità principali dell'applicazione puoi utilizzare un demo: https://vincenzo426.github.io/calendar-app/
