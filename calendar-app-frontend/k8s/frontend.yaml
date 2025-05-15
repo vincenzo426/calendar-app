@@ -44,7 +44,8 @@ metadata:
     kubernetes.io/ingress.class: "traefik"
 spec:
   rules:
-    - http:
+   - host: calendar.local  # Usa un hostname locale per i test
+     http:
         paths:
           - path: /api
             pathType: Prefix

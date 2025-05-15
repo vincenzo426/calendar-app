@@ -5,7 +5,8 @@
 class ApiClient {
   constructor() {
     // URL di base dell'API
-    this.baseURL = process.env.REACT_APP_API_URL || '/api';
+    //process.env.REACT_APP_API_URL || 
+    this.baseURL = '';
     console.log('Base URL:', this.baseURL);
     // Headers predefiniti per le richieste
     this.headers = {
