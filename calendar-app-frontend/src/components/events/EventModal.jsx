@@ -82,18 +82,39 @@ export const EventModal = ({ event = null, date = null, onClose }) => {
   
   // Estrai la data e l'ora da un timestamp ISO con correzione del fuso orario
   const extractDateTimeFromISO = (isoString) => {
-    if (!isoString) return { date: '', time: '' };
+  if (!isoString) return { date: '', time: '' };
     
-    // Crea un oggetto Date dalla stringa ISO
+    // Correggi manualmente l'offset del fuso orario
+    // Parsing manuale della stringa ISO
+    // Esempio: "2023-05-15T15:00:00.000Z"
+    try {
+      const dateMatch = isoString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+      if (dateMatch && dateMatch.length >= 6) {
+        const year = parseInt(dateMatch[1]);
+        const month = parseInt(dateMatch[2]);
+        const day = parseInt(dateMatch[3]);
+        const hour = parseInt(dateMatch[4]);
+        const minute = parseInt(dateMatch[5]);
+        
+        // Formatta la data
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        
+        // Formatta l'ora
+        const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        
+        return { date: dateStr, time: timeStr };
+      }
+    } catch (error) {
+      console.error('Errore nel parsing della data ISO:', error);
+    }
+    
+    // Fallback al metodo standard
     const date = new Date(isoString);
     
-    // Formatta la data come YYYY-MM-DD
-    const dateStr = formatDateForInput(date);
-    
-    // Formatta l'ora come HH:MM
-    const timeStr = formatTimeForInput(date);
-    
-    return { date: dateStr, time: timeStr };
+    return {
+      date: formatDateForInput(date),
+      time: formatTimeForInput(date)
+    };
   };
   
   // Inizializza il form con i dati dell'evento se esiste, o con la data selezionata
