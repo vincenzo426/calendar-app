@@ -40,7 +40,7 @@ export const EventProvider = ({ children }) => {
     
     try {
       setLoading(true);
-      fetchErrorShown.current = false; // Reimposta il flag degli errori per ogni nuova richiesta
+      fetchErrorShown.current = true; // Reimposta il flag degli errori per ogni nuova richiesta
       
       // Costruisci l'URL di query
       let url = '/api/events';

@@ -1,0 +1,19 @@
+spec:
+  template:
+    spec:
+      volumes:
+      - name: jwt-keys
+        configMap:
+          name: jwt-keys
+      containers:
+      - name: auth-service
+        volumeMounts:
+        - name: jwt-keys
+          mountPath: /deployments/config/jwt
+        env:
+        - name: MP_JWT_VERIFY_PUBLICKEY_LOCATION
+          value: /deployments/config/jwt/publicKey.pem
+        - name: SMALLRYE_JWT_SIGN_KEY_LOCATION
+          value: /deployments/config/jwt/privateKey.pem
+        - name: MP_JWT_VERIFY_ISSUER
+          value: https://calendar-app.example.com
