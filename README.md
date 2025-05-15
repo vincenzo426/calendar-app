@@ -20,7 +20,6 @@ Il progetto è strutturato secondo un'architettura microservizi, composta da:
 - **PostgreSQL**: Database relazionale per la persistenza dei dati
 - **Kubernetes**: Orchestrazione dei container per il deployment
 - ![infrastruttura kubernetes](calendar-app-kubernetes.png)
-
 ## Funzionalità Principali
 
 ### Gestione Utenti
