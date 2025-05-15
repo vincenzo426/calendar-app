@@ -17,10 +17,10 @@ export const Demo = ({ onStart }) => {
       <main className="flex-1 py-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Benvenuti nella Demo dell'App Calendario</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">Demo App Calendario</h2>
             
             <p className="text-lg text-gray-700 mb-8">
-              Questa è una versione dimostrativa dell'app calendario che mostra le funzionalità principali senza richiedere un backend reale. 
+              Questa è una versione dimostrativa dell'app calendario che mostra le funzionalità principali. 
               Tutti i dati sono simulati e persistono solo nel browser.
             </p>
 
@@ -58,14 +58,14 @@ export const Demo = ({ onStart }) => {
                   <div className="h-6 w-6 flex items-center justify-center bg-blue-100 text-blue-800 rounded-md mt-0.5 mr-3 flex-shrink-0">F</div>
                   <div>
                     <span className="font-medium">Frontend React</span>
-                    <p className="text-gray-600">Interfaccia utente costruita con React, TailwindCSS e componenti personalizzati</p>
+                    <p className="text-gray-600">Interfaccia utente costruita con React, TailwindCSS</p>
                   </div>
                 </li>
                 <li className="flex items-start">
                   <Server className="h-6 w-6 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
                   <div>
                     <span className="font-medium">Microservizi Java con Quarkus</span>
-                    <p className="text-gray-600">Backend leggero e veloce con tre servizi separati (API Gateway, Auth Service, Event Service)</p>
+                    <p className="text-gray-600">Backend con tre servizi separati (API Gateway, Auth Service, Event Service)</p>
                   </div>
                 </li>
                 <li className="flex items-start">

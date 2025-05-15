@@ -64,17 +64,36 @@ export const EventProvider = ({ children }) => {
       
       // Chiamata API per ottenere gli eventi
       const response = await client.get(url);
+      console.log("Risposta ricevuta:", response);
+
+      // Verifica che la risposta sia un array
+      if (!Array.isArray(response)) {
+        console.error("La risposta non è un array:", response);
+        setEvents([]);  // Inizializza con un array vuoto
+        return [];
+      }
+
       setEvents(response);
       
       return response;
     } catch (error) {
       console.error('Errore durante il caricamento degli eventi:', error);
       
+      // Se l'errore è relativo all'autenticazione, non mostrare la notifica
+      if (error.status === 401) {
+        console.warn("Errore di autenticazione, non mostrare notifica");
+        return [];
+      }
+      
       // Mostra la notifica di errore solo se non è già stata mostrata
       if (!fetchErrorShown.current) {
         toast.error('Errore durante il caricamento degli eventi');
         fetchErrorShown.current = true; // Segna che abbiamo mostrato l'errore
       }
+
+      // Inizializza gli eventi con un array vuoto in caso di errore
+      setEvents([]);
+      return [];
     } finally {
       setLoading(false);
     }
