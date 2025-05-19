@@ -77,4 +77,4 @@ chmod +x manage-calendar-app.sh
 ```
 
 ### Demo
-Per provare le funzionalità principali dell'applicazione puoi utilizzare un demo: https://vincenzo426.github.io/calendar-app/
+Per provare le funzionalità principali dell'applicazione puoi utilizzare un demo: https://vincenzo426.github.io/quarkus-microservices-app/
