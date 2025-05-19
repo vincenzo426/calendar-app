@@ -1,8 +1,9 @@
-// components/Calendar.jsx - Versione corretta
+// components/Calendar.jsx - Versione migliorata
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Info } from 'lucide-react';
 import { useEvent } from '../contexts/EventContext';
 import { CalendarEvent } from './events/CalendarEvent';
+import { DayEventsModal } from './events/DayEventsModal';
 import { useToast } from '../components/ui/Toast';
 
 // Array di nomi mesi per visualizzazione
@@ -22,6 +23,10 @@ export const Calendar = ({ onEventClick, onAddEvent }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState([]);
   
+  // Stato per il modale degli eventi del giorno
+  const [showDayEventsModal, setShowDayEventsModal] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null);
+  
   // Ref per tracciare se il calendario è già stato caricato per questo mese
   const calendarLoadedForMonth = useRef({});
   
@@ -38,8 +43,10 @@ export const Calendar = ({ onEventClick, onAddEvent }) => {
     if (!calendarLoadedForMonth.current[monthKey] && !loading) {
       calendarLoadedForMonth.current[monthKey] = true;
       
-      const startOfMonth = new Date(currentYear, currentMonth, 1);
-      const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
+      // Calcoliamo un range di date più ampio per includere gli eventi multi-giorno
+      // che potrebbero iniziare nel mese precedente o finire nel mese successivo
+      const startOfMonth = new Date(currentYear, currentMonth - 1, 1); // Include il mese precedente
+      const endOfMonth = new Date(currentYear, currentMonth + 2, 0); // Include il mese successivo
       
       fetchEvents(startOfMonth, endOfMonth);
     }
@@ -124,18 +131,43 @@ export const Calendar = ({ onEventClick, onAddEvent }) => {
     setCalendarDays(days);
   }, [currentDate, currentMonth, currentYear]);
   
-  // Filtra e ordina gli eventi per data
+  // Filtra e ordina gli eventi per data, includendo eventi multi-giorno
   const getEventsForDate = (date) => {
-    // Prima filtra gli eventi per la data corrente
+    // Converti date in timestamp alla mezzanotte per confronti corretti
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    const dayTimestamp = dayStart.getTime();
+    
+    // Filtra gli eventi che:
+    // 1. Iniziano in questo giorno, O
+    // 2. Finiscono in questo giorno, O
+    // 3. Iniziano prima e finiscono dopo questo giorno (evento in corso)
     const filteredEvents = events.filter(event => {
       if (!event || !event.startDateTime) return false;
       
       try {
-        const eventDate = new Date(event.startDateTime);
+        const eventStartDate = new Date(event.startDateTime);
+        eventStartDate.setHours(0, 0, 0, 0);
+        const eventStartTimestamp = eventStartDate.getTime();
+        
+        // Se non c'è data di fine, considera solo l'evento nel giorno di inizio
+        if (!event.endDateTime) {
+          return eventStartTimestamp === dayTimestamp;
+        }
+        
+        const eventEndDate = new Date(event.endDateTime);
+        eventEndDate.setHours(0, 0, 0, 0);
+        const eventEndTimestamp = eventEndDate.getTime();
+        
         return (
-          eventDate.getDate() === date.getDate() &&
-          eventDate.getMonth() === date.getMonth() &&
-          eventDate.getFullYear() === date.getFullYear()
+          // L'evento inizia in questo giorno
+          eventStartTimestamp === dayTimestamp ||
+          // L'evento finisce in questo giorno
+          eventEndTimestamp === dayTimestamp ||
+          // L'evento è in corso (inizia prima e finisce dopo)
+          (eventStartTimestamp < dayTimestamp && eventEndTimestamp > dayTimestamp)
         );
       } catch (err) {
         console.error("Errore nel parsing della data dell'evento:", err);
@@ -143,51 +175,21 @@ export const Calendar = ({ onEventClick, onAddEvent }) => {
       }
     });
     
-    // Poi ordina gli eventi per:
-    // 1. Orario di fine (crescente)
-    // 2. Orario di inizio (crescente) in caso di parità
+    // Poi ordina gli eventi per orario di inizio
     return filteredEvents.sort((a, b) => {
       try {
-        // Gestisce il caso in cui endDateTime è null o invalido
-        const aEndTime = a.endDateTime ? new Date(a.endDateTime) : null;
-        const bEndTime = b.endDateTime ? new Date(b.endDateTime) : null;
-        
         const aStartTime = new Date(a.startDateTime);
         const bStartTime = new Date(b.startDateTime);
         
-        // Se uno dei valori è NaN (data non valida), fallback all'ID per stabilità
+        // Se una data non è valida, usa l'ID per stabilità
         if (isNaN(aStartTime) || isNaN(bStartTime)) {
           return (a.id || 0) - (b.id || 0);
         }
         
-        // Validità degli orari di fine
-        const aEndValid = aEndTime && !isNaN(aEndTime);
-        const bEndValid = bEndTime && !isNaN(bEndTime);
-        
-        // Se entrambi non hanno orario di fine valido, ordina per orario di inizio
-        if (!aEndValid && !bEndValid) {
-          return aStartTime - bStartTime;
-        } else if (!aEndValid) {
-          // Se a non ha orario di fine valido, posizionalo dopo b
-          return 1;
-        } else if (!bEndValid) {
-          // Se b non ha orario di fine valido, posizionalo dopo a
-          return -1;
-        }
-        
-        // Confronta orari di fine
-        const endComparison = aEndTime - bEndTime;
-        
-        // Se gli orari di fine sono uguali o molto vicini (entro 1 minuto), 
-        // confronta gli orari di inizio
-        if (Math.abs(endComparison) < 60000) { // 60000 ms = 1 minuto
-          return aStartTime - bStartTime;
-        }
-        
-        return endComparison;
+        return aStartTime - bStartTime;
       } catch (err) {
         console.error("Errore nell'ordinamento degli eventi:", err);
-        return 0; // Mantieni l'ordine attuale in caso di errore
+        return 0;
       }
     });
   };
@@ -221,6 +223,18 @@ export const Calendar = ({ onEventClick, onAddEvent }) => {
     // Crea una copia della data per evitare problemi di riferimento
     const selectedDate = new Date(date.getTime());
     onAddEvent(selectedDate);
+  };
+  
+  // Gestisce il click su una casella del calendario per mostrare gli eventi del giorno
+  const handleDayClick = (date) => {
+    setSelectedDay(date);
+    setShowDayEventsModal(true);
+  };
+  
+  // Chiude il modale degli eventi del giorno
+  const handleCloseDayEventsModal = () => {
+    setShowDayEventsModal(false);
+    setSelectedDay(null);
   };
 
   return (
@@ -271,14 +285,16 @@ export const Calendar = ({ onEventClick, onAddEvent }) => {
           const dayEvents = getEventsForDate(day.date);
           const isCurrentDay = isToday(day.date);
           const isPast = isPastDate(day.date);
+          const hasEvents = dayEvents.length > 0;
           
           return (
             <div 
               key={index}
+              onClick={() => handleDayClick(day.date)}
               className={`min-h-[100px] p-1 border-b border-r border-gray-200 relative ${
                 !day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : 
                 isPast ? 'bg-gray-50' : 'bg-white'
-              }`}
+              } ${hasEvents ? 'cursor-pointer hover:bg-blue-50' : 'cursor-default'}`}
             >
               {/* Intestazione giorno */}
               <div className="flex justify-between items-center">
@@ -290,33 +306,64 @@ export const Calendar = ({ onEventClick, onAddEvent }) => {
                   {day.day}
                 </span>
                 
-                {day.isCurrentMonth && (
-                  <button 
-                    onClick={() => handleAddEventClick(day.date)}
-                    className={`${
-                      isPast ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-blue-600 cursor-pointer'
-                    } transition`}
-                    disabled={isPast}
-                  >
-                    <Plus size={16} />
-                  </button>
-                )}
+                <div className="flex items-center">
+                  {/* Indicatore di eventi */}
+                  {hasEvents && (
+                    <span className="mr-1 text-blue-600">
+                      <Info size={14} />
+                    </span>
+                  )}
+                  
+                  {/* Pulsante aggiungi evento */}
+                  {day.isCurrentMonth && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation(); // Previene l'apertura del modale
+                        handleAddEventClick(day.date);
+                      }}
+                      className={`${
+                        isPast ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400 hover:text-blue-600 cursor-pointer'
+                      } transition`}
+                      disabled={isPast}
+                    >
+                      <Plus size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
               
-              {/* Eventi del giorno */}
+              {/* Eventi del giorno (max 3) */}
               <div className="mt-1 space-y-1 max-h-[80px] overflow-y-auto">
-                {dayEvents.map(event => (
+                {dayEvents.slice(0, 3).map(event => (
                   <CalendarEvent 
                     key={event.id} 
                     event={event} 
-                    onClick={() => onEventClick(event)} 
+                    onClick={(e) => {
+                      e.stopPropagation(); // Previene l'apertura del modale
+                      onEventClick(event);
+                    }} 
                   />
                 ))}
+                {dayEvents.length > 3 && (
+                  <div className="text-xs text-center text-blue-600 mt-1">
+                    +{dayEvents.length - 3} altri
+                  </div>
+                )}
               </div>
             </div>
           );
         })}
       </div>
+      
+      {/* Modale per la visualizzazione degli eventi del giorno */}
+      {showDayEventsModal && selectedDay && (
+        <DayEventsModal
+          date={selectedDay}
+          events={getEventsForDate(selectedDay)}
+          onClose={handleCloseDayEventsModal}
+          onEventClick={onEventClick}
+        />
+      )}
     </div>
   );
 };
