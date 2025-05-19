@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/quarkus-microservices-app/static/css/main.501ce45f.css",
-    "main.js": "/quarkus-microservices-app/static/js/main.068f4756.js",
+    "main.css": "/quarkus-microservices-app/static/css/main.12abdc68.css",
+    "main.js": "/quarkus-microservices-app/static/js/main.5a46a1cf.js",
     "index.html": "/quarkus-microservices-app/index.html",
-    "main.501ce45f.css.map": "/quarkus-microservices-app/static/css/main.501ce45f.css.map",
-    "main.068f4756.js.map": "/quarkus-microservices-app/static/js/main.068f4756.js.map"
+    "main.12abdc68.css.map": "/quarkus-microservices-app/static/css/main.12abdc68.css.map",
+    "main.5a46a1cf.js.map": "/quarkus-microservices-app/static/js/main.5a46a1cf.js.map"
   },
   "entrypoints": [
-    "static/css/main.501ce45f.css",
-    "static/js/main.068f4756.js"
+    "static/css/main.12abdc68.css",
+    "static/js/main.5a46a1cf.js"
   ]
 }
