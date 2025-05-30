@@ -167,8 +167,8 @@ deploy_backend() {
     
     # Pulizia delle risorse K3s
     echo "1. Pulizia dei deployment precedenti..."
-    sudo kubectl delete svc api-gateway auth-service event-service -n calendar-app --ignore-not-found=true
-    sudo kubectl delete deployment api-gateway auth-service event-service -n calendar-app --ignore-not-found=true
+    sudo kubectl delete svc api-gateway auth-service event-service postgres.yaml -n calendar-app --ignore-not-found=true
+    sudo kubectl delete deployment api-gateway auth-service event-service postgres.yaml -n calendar-app --ignore-not-found=true
     
     # Attendi la rimozione completa
     echo "2. Attesa per la rimozione completa dei pod..."
@@ -195,10 +195,11 @@ deploy_backend() {
     
     # Applica le configurazioni K8s
     echo "5. Applicazione delle configurazioni K8s..."
+    sudo kubectl apply -f k8s/postgres.yaml
     sudo kubectl apply -f k8s/auth-service.yaml
     sudo kubectl apply -f k8s/event-service.yaml
     sudo kubectl apply -f k8s/api-gateway.yaml
-    
+
     echo "6. Attesa per l'avvio dei pod..."
     sleep 10
     sudo kubectl get pods -n calendar-app
